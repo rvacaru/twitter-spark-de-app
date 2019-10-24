@@ -1,0 +1,28 @@
+*.class
+*.log
+.classpath
+.settings
+.project
+.metadata
+.directory
+.sonarlint
+target
+bin
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**
+!**/src/test/**
+
+### SpringToolSuite ###
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
+
+### IntelliJ Idea ###
+.idea/
+.idea
+*.iws
+*.iml
+*.ipr
