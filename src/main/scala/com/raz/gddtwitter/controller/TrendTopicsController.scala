@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.{GetMapping, RequestMapping, Requ
 class TrendTopicsController @Autowired()(private val trendTopicsService: TrendTopicsService) {
 
   @GetMapping(Array("/topTrendingTopics"))
-  def getTopTrendingTopics(@RequestParam("noTopics") noTopics: Int, @RequestParam("window") minutesWindow: Long): Long = {
+  def getTopTrendingTopics(@RequestParam(value = "noTopics", defaultValue = "5") noTopics: Int,
+                           @RequestParam(value = "window", defaultValue = "500") minutesWindow: Long): Long = {
+
     42L
   }
 
