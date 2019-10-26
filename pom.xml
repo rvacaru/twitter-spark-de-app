@@ -65,12 +65,12 @@
 <!--            <version>3.0.2</version>-->
 <!--        </dependency>-->
 
-        <!-- Others -->
-<!--        <dependency>-->
-<!--            <groupId>org.codehaus.janino</groupId>-->
-<!--            <artifactId>commons-compiler</artifactId>-->
-<!--            <version>3.1.0</version>-->
-<!--        </dependency>-->
+        <!-- Others needed for spark to read from local FS -->
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>commons-compiler</artifactId>
+            <version>3.1.0</version>
+        </dependency>
 
 <!--        <dependency>-->
 <!--            <groupId>org.projectlombok</groupId>-->

@@ -7,11 +7,15 @@ import org.springframework.context.annotation.{Bean, Configuration}
 @Configuration
 class PropertiesConfig {
 
-  @Value("${topics.hdfs.path:hdfs:///default/path/sample.json}") private val topicsHdfsPath: String = null
+  @Value("${topics.hdfs.path.sample:hdfs:///default/path/sample.json}")
+  private val sampleHdfsPath: String = null
+
+  @Value("${topics.hdfs.path.twitter-sample:hdfs:///default/path/twitter-sample.json}")
+  private val twitterSampleHdfsPath: String = null
 
   @Bean
   def appProperties: AppProperties = {
-    new AppProperties(topicsHdfsPath)
+    new AppProperties(sampleHdfsPath, twitterSampleHdfsPath)
   }
 
 }

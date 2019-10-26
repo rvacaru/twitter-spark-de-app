@@ -1,5 +1,5 @@
 package com.raz.gddtwitter.config.properties
 
-class AppProperties(val topicsHdfsPath: String) {
+class AppProperties(val sampleHdfsPath: String, val twitterSampleHdfsPath: String) {
 
 }
