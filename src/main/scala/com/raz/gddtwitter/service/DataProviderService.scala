@@ -2,10 +2,8 @@ package com.raz.gddtwitter.service
 
 import com.raz.gddtwitter.config.properties.AppProperties
 import com.raz.gddtwitter.service.SchemaConstants._
-import javax.annotation.PostConstruct
-import org.apache.spark.sql.{Column, DataFrame, Dataset, SparkSession}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Column, DataFrame, Dataset, SparkSession}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -13,7 +11,7 @@ import org.springframework.stereotype.Service
 class DataProviderService @Autowired()(private val sparkSession: SparkSession,
                                        private val appProperties: AppProperties) extends Serializable {
 
-  def getTwitterTextDf: DataFrame = {
+  def getTwitterTextDf(): DataFrame = {
     val filteredSampleDataset = readAndFilterSampleJson(appProperties.sampleHdfsPath,
       (str: String) => str.startsWith(COORDINATES_PREFIX))
 

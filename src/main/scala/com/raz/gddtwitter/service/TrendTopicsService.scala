@@ -1,59 +1,72 @@
 package com.raz.gddtwitter.service
 
-import java.sql.Timestamp
+import java.util
 
-import com.raz.gddtwitter.domain.{TopicsWindow, TrendingTopicsWindow}
+import com.raz.gddtwitter.domain.{TopicsWindow, TrendingTopicsWindow, TrendingTopicsWindowApi}
 import com.raz.gddtwitter.service.SchemaConstants._
-import javax.annotation.PostConstruct
-import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TrendTopicsService @Autowired()(private val dataProviderService: DataProviderService, private val sparkSession: SparkSession) extends Serializable {
+class TrendTopicsService @Autowired()(private val dataProviderService: DataProviderService,
+                                      private val sparkSession: SparkSession) extends Serializable {
+
+  import sparkSession.implicits._
 
   private val MINUTE_DURATION = " minute"
   private val TOPICS = "topics"
+  private val WINDOW_START = "window.start"
+  private val WINDOW_END = "window.end"
   private val START = "start"
+  private val END = "end"
+  private val DATE_FORMAT_API = "yyyy-MM-dd HH:mm:ss"
 
-  @PostConstruct
-  def initTesting = {
-    getTopTrendingTopicsPerWindow(3, 60)
+//  @PostConstruct
+//  def initTesting = {
+////    getTopTrendingTopicsPerWindow(6, 60)
+//  }
+
+  def getTopTrendingTopicsPerWindowAsList(noTopTopics: Int, minutesWindowSize: Long): util.List[TrendingTopicsWindowApi] = {
+    getTopTrendingTopicsPerWindow(noTopTopics, minutesWindowSize)
+      .select(date_format(col(START), DATE_FORMAT_API).as(START), date_format(col(END), DATE_FORMAT_API).as(END), col(TOPICS))
+      .as[TrendingTopicsWindowApi]
+      .collectAsList()
   }
 
-  def getTopTrendingTopicsPerWindow(noTopTopics: Int, minutesWindowSize: Long) = {
-    val textDf = dataProviderService.getTwitterTextDf.sort(CREATED_AT).cache()
+  def getTopTrendingTopicsPerWindow(noTopTopics: Int, minutesWindowSize: Long): Dataset[TrendingTopicsWindow] = {
+    val topicsDf = getTopicsDf()
+    val trendDf = groupTopicsPerWindow(topicsDf, minutesWindowSize)
 
-    val topicsDf = getTopicsDf(textDf)
+    mapToTrendingTopicsPerWindow(trendDf, noTopTopics)
+  }
 
-    val windowDuration: String = minutesWindowSize + MINUTE_DURATION
-
-    val trendDf = topicsDf.groupBy(window(col(CREATED_AT), windowDuration))
-        .agg(collect_list(TOPIC).as(TOPICS))
-
-    import sparkSession.implicits._
-
+  private def mapToTrendingTopicsPerWindow(trendDf: DataFrame, noTopTopics: Int): Dataset[TrendingTopicsWindow] = {
     val trendingTopicsDf = trendDf
-      .select("window.start", "window.end", TOPICS).as[TopicsWindow]
+      .select(col(WINDOW_START), col(WINDOW_END), col(TOPICS)).as[TopicsWindow]
       .map(tw => TrendingTopicsWindow(tw.start, tw.end,
-        tw.topics.groupBy(identity).mapValues(_.size).toSeq.sortWith(_._2 > _._2).take(noTopTopics))
-      )
+        tw.topics.groupBy(identity).mapValues(_.size).toSeq.sortWith(_._2 > _._2).take(noTopTopics)))
+      .sort(desc(START))
 
-    val x = trendingTopicsDf.sort(desc(START))
-
-    x
+   trendingTopicsDf
   }
 
-  private def groupTopTrendingTopics(noTopTopics: Int, topics: Column): Column = {
-    topics.getItem()
+  private def groupTopicsPerWindow(topicsDf: DataFrame, minutesWindowSize: Long): DataFrame = {
+    val trendDf = topicsDf
+      .groupBy(window(col(CREATED_AT), minutesWindowSize + MINUTE_DURATION))
+      .agg(collect_list(TOPIC).as(TOPICS))
+
+    trendDf
   }
 
-  def getTopicsDf(textDf: DataFrame): DataFrame = {
-    textDf
-      .withColumn(TEXT, explode(split(col(TEXT), " ")))
+  private def getTopicsDf(): DataFrame = {
+    dataProviderService
+      .getTwitterTextDf()
+      .cache()
+      .withColumn(TEXT, explode(split(col(TEXT), "\\s+")))
       .withColumn(TEXT, lower(col(TEXT)))
       .withColumnRenamed(TEXT, TOPIC)
+      .cache()
   }
 }
