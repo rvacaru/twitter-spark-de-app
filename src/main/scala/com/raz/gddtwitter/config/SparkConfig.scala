@@ -1,29 +1,36 @@
 package com.raz.gddtwitter.config
 
+import com.raz.gddtwitter.config.properties.AppProperties
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
-import org.springframework.context.annotation.{Bean, Configuration}
+import org.springframework.context.annotation.{Bean, Configuration, Import}
 
 @Configuration
+@Import(Array(classOf[PropertiesConfig]))
 class SparkConfig {
 
   @Bean
-  def sparkSession(): SparkSession = {
+  def sparkSession(sparkConf: SparkConf): SparkSession = {
     SparkSession
       .builder()
-      .config(sparkConf())
+      .config(sparkConf)
       .getOrCreate()
   }
 
   @Bean
-  def sparkContext(sparkSession: SparkSession): SparkContext = {
-    sparkSession.sparkContext
+  def sparkContext(sparkSession: SparkSession, appProperties: AppProperties): SparkContext = {
+    val sparkCtx = sparkSession.sparkContext
+    sparkCtx.hadoopConfiguration
+      .set("fs.default.name", appProperties.hdfsName)
+
+    sparkCtx
   }
 
-  private def sparkConf(): SparkConf = {
+  @Bean
+  def sparkConf(appProperties: AppProperties): SparkConf = {
     new SparkConf()
       .setAppName("Spark Twitter App")
-      .set("spark.master", "local[*]")
+      .set("spark.master", appProperties.sparkMaster)
 
     //eventually more configuration
   }

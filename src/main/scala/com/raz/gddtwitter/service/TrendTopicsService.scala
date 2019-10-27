@@ -5,7 +5,7 @@ import java.util
 import com.raz.gddtwitter.domain.{TopicsWindow, TrendingTopicsWindow, TrendingTopicsWindowApi}
 import com.raz.gddtwitter.service.SchemaConstants._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 

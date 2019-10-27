@@ -1,6 +1,8 @@
 package com.raz.gddtwitter.config.properties
 
-class AppProperties(@transient val sampleHdfsPath: String,
-                    @transient val twitterSampleHdfsPath: String) extends Serializable {
+case class AppProperties(@transient sparkMaster:String,
+                         @transient hdfsName: String,
+                         @transient sampleHdfsPath: String,
+                         @transient twitterSampleHdfsPath: String) extends Serializable {
 
 }

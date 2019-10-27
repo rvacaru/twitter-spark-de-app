@@ -7,6 +7,12 @@ import org.springframework.context.annotation.{Bean, Configuration}
 @Configuration
 class PropertiesConfig {
 
+  @Value("${spark.master}")
+  private val sparkMaster: String = null
+
+  @Value("${hdfs.default.name}")
+  private val hdfsName: String = null
+
   @Value("${topics.hdfs.path.sample:hdfs:///default/path/sample.json}")
   private val sampleHdfsPath: String = null
 
@@ -15,7 +21,12 @@ class PropertiesConfig {
 
   @Bean
   def appProperties: AppProperties = {
-    new AppProperties(sampleHdfsPath, twitterSampleHdfsPath)
+    AppProperties(
+      sparkMaster,
+      hdfsName,
+      sampleHdfsPath,
+      twitterSampleHdfsPath
+    )
   }
 
 }
