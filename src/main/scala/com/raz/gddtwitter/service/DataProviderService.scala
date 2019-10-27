@@ -1,6 +1,7 @@
 package com.raz.gddtwitter.service
 
 import com.raz.gddtwitter.config.properties.AppProperties
+import com.raz.gddtwitter.service.SchemaConstants._
 import javax.annotation.PostConstruct
 import org.apache.spark.sql.{Column, DataFrame, Dataset, SparkSession}
 import org.apache.spark.sql.functions._
@@ -12,35 +13,24 @@ import org.springframework.stereotype.Service
 class DataProviderService @Autowired()(private val sparkSession: SparkSession,
                                        private val appProperties: AppProperties) extends Serializable {
 
-  private val CREATED_AT = "created_at"
-  private val TEXT = "text"
-  private val TWITTER_CREATED_AT = "twitter." + CREATED_AT
-  private val TWITTER_TEXT = "twitter." + TEXT
-  private val DATE_FORMAT_SAMPLE = "EEE MMM dd HH:mm:ss Z yyyy"
-  private val DATE_FORMAT_TWITTER_SAMPLE ="EEE, dd MMM yyyy HH:mm:ss Z"
-  private val COORDINATES_PREFIX = "{\"coordinates\":"
-  private val TWITTER_TYPE_PATTERN = "\"type\":\"twitter\""
-  private val RETWEET_PATTERN = "\"retweet\":{"
-
-  @PostConstruct
-  def init() = {
-    println(appProperties.sampleHdfsPath)
-    val dsSample = readAndFilterSampleJson(appProperties.sampleHdfsPath,
+  def getTwitterTextDf: DataFrame = {
+    val filteredSampleDataset = readAndFilterSampleJson(appProperties.sampleHdfsPath,
       (str: String) => str.startsWith(COORDINATES_PREFIX))
 
-    val dsTwitterSample = readAndFilterSampleJson(appProperties.twitterSampleHdfsPath,
+    val filteredTwitterSampleDataset = readAndFilterSampleJson(appProperties.twitterSampleHdfsPath,
       (str: String) => str.contains(TWITTER_TYPE_PATTERN) && !str.contains(RETWEET_PATTERN))
 
-    toTwitterCreatedAtAndTextDf(dsTwitterSample)
+    toTwitterCreatedAtAndTextDf(filteredTwitterSampleDataset)
+      .union(toCreatedAtAndTextDf(filteredSampleDataset))
   }
 
-  def readAndFilterSampleJson(hdfsPath: String, filterFunction: String => Boolean): Dataset[String] = {
+  private def readAndFilterSampleJson(hdfsPath: String, filterFunction: String => Boolean): Dataset[String] = {
     sparkSession.read
       .textFile(hdfsPath)
       .filter(filterFunction)
   }
 
-  def toCreatedAtAndTextDf(stringDataset: Dataset[String]): DataFrame = {
+  private def toCreatedAtAndTextDf(stringDataset: Dataset[String]): DataFrame = {
     val filterDf = sparkSession.read.json(stringDataset)
       .select(col(CREATED_AT), col(TEXT))
       .where(createdAtAndTextAreNotNullOrEmptyStringsCondition())
@@ -49,7 +39,7 @@ class DataProviderService @Autowired()(private val sparkSession: SparkSession,
     filterDf
   }
 
-  def toTwitterCreatedAtAndTextDf(stringDataset: Dataset[String]): DataFrame = {
+  private def toTwitterCreatedAtAndTextDf(stringDataset: Dataset[String]): DataFrame = {
     val filterDf = sparkSession.read.json(stringDataset)
       .select(col(TWITTER_CREATED_AT), col(TWITTER_TEXT))
       .where(createdAtAndTextAreNotNullOrEmptyStringsCondition())

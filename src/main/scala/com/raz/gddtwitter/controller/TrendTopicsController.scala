@@ -10,7 +10,7 @@ class TrendTopicsController @Autowired()(private val trendTopicsService: TrendTo
 
   @GetMapping(Array("/trending_topics"))
   def getTopTrendingTopics(@RequestParam(value = "noTopics", defaultValue = "5") noTopics: Int,
-                           @RequestParam(value = "window", defaultValue = "500") minutesWindow: Long): Long = {
+                           @RequestParam(value = "minutesWindow", defaultValue = "500") minutesWindow: Long): Long = {
 
     42L
   }
