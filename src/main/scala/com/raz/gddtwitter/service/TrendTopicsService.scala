@@ -4,7 +4,6 @@ import java.util
 
 import com.raz.gddtwitter.domain.{TopicsWindow, TrendingTopicsWindow, TrendingTopicsWindowApi}
 import com.raz.gddtwitter.service.SchemaConstants._
-import com.typesafe.scalalogging.LazyLogging
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class TrendTopicsService @Autowired()(private val sparkSession: SparkSession,
-                                      private val tweetDataService: TweetDataService) extends Serializable with LazyLogging {
+                                      private val tweetDataService: TweetDataService) extends Serializable {
 
   import sparkSession.implicits._
 
@@ -30,8 +29,6 @@ class TrendTopicsService @Autowired()(private val sparkSession: SparkSession,
       .select(date_format(col(START), DATE_FORMAT_API).as(START), date_format(col(END), DATE_FORMAT_API).as(END), col(TOPICS))
       .as[TrendingTopicsWindowApi]
       .collectAsList()
-
-    logger.debug("Produced {} windows of top {} trending topics", trendingTopicsList.size(), noTopTopics)
 
     trendingTopicsList
   }
@@ -76,7 +73,6 @@ class TrendTopicsService @Autowired()(private val sparkSession: SparkSession,
     tokens(0).toInt
     if (!VALID_WINDOW_INTERVALS.contains(tokens(1))) {
       val ex = new IllegalArgumentException("Window phrase is invalid")
-      logger.error("Window time interval: {} is invalid", windowPhrase, ex)
       throw ex
     }
   }
