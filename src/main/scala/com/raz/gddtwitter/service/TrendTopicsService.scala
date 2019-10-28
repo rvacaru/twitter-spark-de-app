@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TrendTopicsService @Autowired()(private val dataProviderService: DataProviderService,
+class TrendTopicsService @Autowired()(private val tweetDataService: TweetDataService,
                                       private val sparkSession: SparkSession) extends Serializable {
 
   import sparkSession.implicits._
@@ -61,8 +61,8 @@ class TrendTopicsService @Autowired()(private val dataProviderService: DataProvi
   }
 
   private def getTopicsDf(): DataFrame = {
-    dataProviderService
-      .getTwitterTextDf()
+    tweetDataService
+      .getTweetDf()
       .cache()
       .withColumn(TEXT, explode(split(col(TEXT), "\\s+")))
       .withColumn(TEXT, lower(col(TEXT)))
