@@ -46,6 +46,12 @@
             <artifactId>spark-sql_2.11</artifactId>
             <version>2.4.0</version>
         </dependency>
+        <!-- Spark related: needed for spark to read files with ResourceFinder -->
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>commons-compiler</artifactId>
+            <version>3.1.0</version>
+        </dependency>
 
         <!-- Jackson libs for scala JSON object marshalling and unmarshalling -->
         <dependency>
@@ -65,12 +71,7 @@
 <!--            <version>3.0.2</version>-->
 <!--        </dependency>-->
 
-        <!-- Others needed for spark to read from local FS -->
-        <dependency>
-            <groupId>org.codehaus.janino</groupId>
-            <artifactId>commons-compiler</artifactId>
-            <version>3.1.0</version>
-        </dependency>
+
 
 <!--        <dependency>-->
 <!--            <groupId>org.projectlombok</groupId>-->
@@ -151,5 +152,56 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>docker</id>
+            <activation>
+                <property>
+                    <name>docker</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.fabric8</groupId>
+                        <artifactId>docker-maven-plugin</artifactId>
+                        <version>0.31.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <verbose>true</verbose>
+                            <images>
+                                <image>
+                                    <name>${project.artifactId}</name>
+                                    <build>
+                                        <from>java:8-jdk-alpine</from>
+                                        <entryPoint>
+                                            <exec>
+                                                <args>java</args>
+                                                <args>-jar</args>
+                                                <args>/maven/${project.artifactId}-${project.version}.jar</args>
+                                            </exec>
+                                        </entryPoint>
+                                        <assembly>
+                                            <descriptorRef>artifact</descriptorRef>
+                                        </assembly>
+                                    </build>
+                                </image>
+                            </images>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>build</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>build</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>
