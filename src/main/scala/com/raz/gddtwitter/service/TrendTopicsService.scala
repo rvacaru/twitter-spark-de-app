@@ -4,18 +4,19 @@ import java.util
 
 import com.raz.gddtwitter.domain.{TopicsWindow, TrendingTopicsWindow, TrendingTopicsWindowApi}
 import com.raz.gddtwitter.service.SchemaConstants._
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class TrendTopicsService @Autowired()(private val tweetDataService: TweetDataService,
-                                      private val sparkSession: SparkSession) extends Serializable {
+class TrendTopicsService @Autowired()(private val sparkSession: SparkSession,
+                                      private val tweetDataService: TweetDataService) extends Serializable with LazyLogging {
 
   import sparkSession.implicits._
 
-  private val MINUTE_DURATION = " minute"
+  private val VALID_WINDOW_INTERVALS = Seq("second", "minute", "hour", "day", "week")
   private val TOPICS = "topics"
   private val WINDOW_START = "window.start"
   private val WINDOW_END = "window.end"
@@ -23,21 +24,21 @@ class TrendTopicsService @Autowired()(private val tweetDataService: TweetDataSer
   private val END = "end"
   private val DATE_FORMAT_API = "yyyy-MM-dd HH:mm:ss"
 
-//  @PostConstruct
-//  def initTesting = {
-////    getTopTrendingTopicsPerWindow(6, 60)
-//  }
-
-  def getTopTrendingTopicsPerWindowAsList(noTopTopics: Int, minutesWindowSize: Long): util.List[TrendingTopicsWindowApi] = {
-    getTopTrendingTopicsPerWindow(noTopTopics, minutesWindowSize)
+  def getTopTrendingTopicsPerWindowAsList(noTopTopics: Int, windowPhrase: String): util.List[TrendingTopicsWindowApi] = {
+    validateWindowPhrase(windowPhrase)
+    val trendingTopicsList = getTopTrendingTopicsPerWindow(noTopTopics, windowPhrase)
       .select(date_format(col(START), DATE_FORMAT_API).as(START), date_format(col(END), DATE_FORMAT_API).as(END), col(TOPICS))
       .as[TrendingTopicsWindowApi]
       .collectAsList()
+
+    logger.debug("Produced {} windows of top {} trending topics", trendingTopicsList.size(), noTopTopics)
+
+    trendingTopicsList
   }
 
-  def getTopTrendingTopicsPerWindow(noTopTopics: Int, minutesWindowSize: Long): Dataset[TrendingTopicsWindow] = {
+  def getTopTrendingTopicsPerWindow(noTopTopics: Int, windowPhrase: String): Dataset[TrendingTopicsWindow] = {
     val topicsDf = getTopicsDf()
-    val trendDf = groupTopicsPerWindow(topicsDf, minutesWindowSize)
+    val trendDf = groupTopicsPerWindow(topicsDf, windowPhrase)
 
     mapToTrendingTopicsPerWindow(trendDf, noTopTopics)
   }
@@ -52,9 +53,9 @@ class TrendTopicsService @Autowired()(private val tweetDataService: TweetDataSer
    trendingTopicsDf
   }
 
-  private def groupTopicsPerWindow(topicsDf: DataFrame, minutesWindowSize: Long): DataFrame = {
+  private def groupTopicsPerWindow(topicsDf: DataFrame, windowPhrase: String): DataFrame = {
     val trendDf = topicsDf
-      .groupBy(window(col(CREATED_AT), minutesWindowSize + MINUTE_DURATION))
+      .groupBy(window(col(CREATED_AT), windowPhrase))
       .agg(collect_list(TOPIC).as(TOPICS))
 
     trendDf
@@ -69,4 +70,15 @@ class TrendTopicsService @Autowired()(private val tweetDataService: TweetDataSer
       .withColumnRenamed(TEXT, TOPIC)
       .cache()
   }
+
+  private def validateWindowPhrase(windowPhrase: String): Unit = {
+    val tokens = windowPhrase.split(" ")
+    tokens(0).toInt
+    if (!VALID_WINDOW_INTERVALS.contains(tokens(1))) {
+      val ex = new IllegalArgumentException("Window phrase is invalid")
+      logger.error("Window time interval: {} is invalid", windowPhrase, ex)
+      throw ex
+    }
+  }
+
 }

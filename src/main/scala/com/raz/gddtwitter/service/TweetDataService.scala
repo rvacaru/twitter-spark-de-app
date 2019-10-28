@@ -14,6 +14,14 @@ class TweetDataService @Autowired()(private val sparkSession: SparkSession,
                                     private val hdfsDataService: HdfsDataService,
                                     private val appProperties: AppProperties) extends Serializable {
 
+  private val TWITTER_CREATED_AT: String = "twitter." + CREATED_AT
+  private val TWITTER_TEXT: String = "twitter." + TEXT
+  private val DATE_FORMAT_SAMPLE: String = "EEE MMM dd HH:mm:ss Z yyyy"
+  private val DATE_FORMAT_TWITTER_SAMPLE: String ="EEE, dd MMM yyyy HH:mm:ss Z"
+  private val COORDINATES_PREFIX: String = "{\"coordinates\":"
+  private val TWITTER_TYPE_PATTERN: String = "\"type\":\"twitter\""
+  private val RETWEET_PATTERN: String = "\"retweet\":{"
+
   def getTweetDf(): DataFrame = {
 
     val filteredSampleDataset: Dataset[String] = hdfsDataService

@@ -6,9 +6,10 @@ import org.springframework.context.annotation.{Bean, Configuration}
 import org.springframework.http.converter.HttpMessageConverter
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
+import org.springframework.validation.beanvalidation.MethodValidationPostProcessor
 
 @Configuration
-class WebScalaJacksonConfig extends WebMvcConfigurer {
+class WebConfig extends WebMvcConfigurer {
 
   override def configureMessageConverters(converters: java.util.List[HttpMessageConverter[_]]): Unit = {
     def mapper: ObjectMapper = createObjectMapper
@@ -28,5 +29,10 @@ class WebScalaJacksonConfig extends WebMvcConfigurer {
   @Bean
   def createObjectMapper: ObjectMapper = {
     new ObjectMapper
+  }
+
+  @Bean
+  def methodValidationPostProcessor: MethodValidationPostProcessor = {
+    new MethodValidationPostProcessor
   }
 }
