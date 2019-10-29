@@ -10,6 +10,9 @@ class PropertiesConfig {
   @Value("${spark.master}")
   private val sparkMaster: String = null
 
+  @Value("s{spark.sql.shuffle.partitions:200}")
+  private val sparkShufflePartitions: String = null
+
   @Value("${hdfs.default.name}")
   private val hdfsName: String = null
 
@@ -23,6 +26,7 @@ class PropertiesConfig {
   def appProperties: AppProperties = {
     AppProperties(
       sparkMaster,
+      sparkShufflePartitions,
       hdfsName,
       sampleHdfsPath,
       twitterSampleHdfsPath

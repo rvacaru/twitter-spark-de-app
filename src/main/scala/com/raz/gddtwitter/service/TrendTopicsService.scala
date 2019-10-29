@@ -1,7 +1,5 @@
 package com.raz.gddtwitter.service
 
-import java.util
-
 import com.raz.gddtwitter.domain.{TopicsWindow, TrendingTopicsWindow, TrendingTopicsWindowApi}
 import com.raz.gddtwitter.service.SchemaConstants._
 import org.apache.spark.sql.functions._
@@ -23,49 +21,48 @@ class TrendTopicsService @Autowired()(private val sparkSession: SparkSession,
   private val END = "end"
   private val DATE_FORMAT_API = "yyyy-MM-dd HH:mm:ss"
 
-  def getTopTrendingTopicsPerWindowAsList(noTopTopics: Int, windowPhrase: String): util.List[TrendingTopicsWindowApi] = {
+  def getTopTrendingTopicsPerWindowAsSet(noTopTopics: Int, windowPhrase: String): Set[TrendingTopicsWindowApi] = {
     validateWindowPhrase(windowPhrase)
     val trendingTopicsList = getTopTrendingTopicsPerWindow(noTopTopics, windowPhrase)
       .select(date_format(col(START), DATE_FORMAT_API).as(START), date_format(col(END), DATE_FORMAT_API).as(END), col(TOPICS))
       .as[TrendingTopicsWindowApi]
-      .collectAsList()
+      .collect()
+      .toSet
 
     trendingTopicsList
   }
 
   def getTopTrendingTopicsPerWindow(noTopTopics: Int, windowPhrase: String): Dataset[TrendingTopicsWindow] = {
     val topicsDf = getTopicsDf()
-    val trendDf = groupTopicsPerWindow(topicsDf, windowPhrase)
+    val topicsPerWindowDf = groupTopicsPerWindow(topicsDf, windowPhrase)
 
-    mapToTrendingTopicsPerWindow(trendDf, noTopTopics)
+    mapToTrendingTopicsWindow(topicsPerWindowDf, noTopTopics)
   }
 
-  private def mapToTrendingTopicsPerWindow(trendDf: DataFrame, noTopTopics: Int): Dataset[TrendingTopicsWindow] = {
-    val trendingTopicsDf = trendDf
+  private def mapToTrendingTopicsWindow(topicsPerWindowDf: DataFrame, noTopTopics: Int): Dataset[TrendingTopicsWindow] = {
+    val trendingTopicsWindowDf = topicsPerWindowDf
       .select(col(WINDOW_START), col(WINDOW_END), col(TOPICS)).as[TopicsWindow]
       .map(tw => TrendingTopicsWindow(tw.start, tw.end,
         tw.topics.groupBy(identity).mapValues(_.size).toSeq.sortWith(_._2 > _._2).take(noTopTopics)))
       .sort(desc(START))
 
-   trendingTopicsDf
+   trendingTopicsWindowDf
   }
 
   private def groupTopicsPerWindow(topicsDf: DataFrame, windowPhrase: String): DataFrame = {
-    val trendDf = topicsDf
+    val topicsPerWindowDf = topicsDf
       .groupBy(window(col(CREATED_AT), windowPhrase))
       .agg(collect_list(TOPIC).as(TOPICS))
 
-    trendDf
+    topicsPerWindowDf
   }
 
   private def getTopicsDf(): DataFrame = {
     tweetDataService
       .getTweetDf()
-      .cache()
       .withColumn(TEXT, explode(split(col(TEXT), "\\s+")))
       .withColumn(TEXT, lower(col(TEXT)))
       .withColumnRenamed(TEXT, TOPIC)
-      .cache()
   }
 
   private def validateWindowPhrase(windowPhrase: String): Unit = {

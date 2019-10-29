@@ -31,7 +31,7 @@ class SparkConfig {
     new SparkConf()
       .setAppName("Spark Twitter App")
       .set("spark.master", appProperties.sparkMaster)
-
+      .set("spark.sql.shuffle.partitions", appProperties.sparkShufflePartitions)
     //eventually more configuration
   }
 }

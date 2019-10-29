@@ -24,9 +24,9 @@ class TrendTopicsController @Autowired()(private val trendTopicsService: TrendTo
   @GetMapping(Array("/trending_topics"))
   def getTopTrendingTopics(
     @RequestParam(value = "noTopics", defaultValue = "5") @Min(1) noTopics: Int,
-    @RequestParam(value = "minutesWindow", defaultValue = "1 day") @NotBlank windowPhrase: String): util.List[TrendingTopicsWindowApi] = {
+    @RequestParam(value = "windowPhrase", defaultValue = "1 day") @NotBlank windowPhrase: String): Set[TrendingTopicsWindowApi] = {
 
-    trendTopicsService.getTopTrendingTopicsPerWindowAsList(noTopics, windowPhrase)
+    trendTopicsService.getTopTrendingTopicsPerWindowAsSet(noTopics, windowPhrase)
   }
 
 }
