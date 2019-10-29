@@ -1,3 +1,5 @@
+hadoop/sample.json
+hadoop/twitter-sample.json
 *.class
 *.log
 .classpath
