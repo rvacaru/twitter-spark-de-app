@@ -10,7 +10,7 @@ class PropertiesConfig {
   @Value("${spark.master}")
   private val sparkMaster: String = null
 
-  @Value("s{spark.sql.shuffle.partitions:200}")
+  @Value("${spark.sql.shuffle.partitions:200}")
   private val sparkShufflePartitions: String = null
 
   @Value("${hdfs.default.name}")

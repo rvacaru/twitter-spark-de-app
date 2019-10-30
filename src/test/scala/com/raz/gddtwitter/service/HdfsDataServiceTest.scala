@@ -18,21 +18,24 @@ class HdfsDataServiceTest extends FlatSpec with MockFactory with DatasetSuiteBas
     val mockDataset: Dataset[String] = createMockDataset()
   }
 
-  "it" should "return a non empty dataset when path file exists" in new Test {
-    val path: String = getClass.getResource("/test2.txt").getPath()
+  "retrieveSampleDataset" should "return a non empty dataset when path file exists" in new Test {
+    private val path: String = getClass.getResource("/testFile.txt").getPath()
     (hdfsUtilServiceMock.existsInHdfs _).when(path).returns(true)
 
-    val actualDataset: Dataset[String] = hdfsDataService.retrieveSampleDataset(path)
+    private val actualDataset: Dataset[String] = hdfsDataService.retrieveSampleDataset(path)
 
+    (hdfsUtilServiceMock.existsInHdfs _).verify(path)
     assert(!actualDataset.isEmpty)
     assert(mockDataset.collect().toSet === actualDataset.collect().toSet)
   }
 
-  "it" should "return an empty dataset when path file doesn't exist" in new Test {
-    (hdfsUtilServiceMock.existsInHdfs _).when("/path/not-existent.txt").returns(false)
+  "retrieveSampleDataset" should "return an empty dataset when path file doesn't exist" in new Test {
+    private val invalidPath = "/path/not-existent.txt"
+    (hdfsUtilServiceMock.existsInHdfs _).when(invalidPath).returns(false)
 
-    val actualDataset: Dataset[String] = hdfsDataService.retrieveSampleDataset("/path/not-existent.txt")
+    private val actualDataset: Dataset[String] = hdfsDataService.retrieveSampleDataset(invalidPath)
 
+    (hdfsUtilServiceMock.existsInHdfs _).verify(invalidPath)
     assert(actualDataset.isEmpty)
   }
 

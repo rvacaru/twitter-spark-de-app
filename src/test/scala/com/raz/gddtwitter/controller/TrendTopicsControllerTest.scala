@@ -8,7 +8,6 @@ import org.hamcrest.Matchers._
 import org.junit.runner.RunWith
 import org.junit.{Before, Test}
 import org.mockito.Mockito.when
-import org.scalamock.scalatest.MockFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -20,7 +19,7 @@ import org.springframework.web.util.NestedServletException
 
 @RunWith(classOf[SpringRunner])
 @WebMvcTest(Array(classOf[TrendTopicsController]))
-class TrendTopicsControllerTest extends MockFactory {
+class TrendTopicsControllerTest {
 
   private val BASE_URL = "/api/trending_topics"
   private val NO_TOPICS = "noTopics"
@@ -40,11 +39,6 @@ class TrendTopicsControllerTest extends MockFactory {
 
     when(trendTopicsService.getTopTrendingTopicsPerWindowAsSet(5, "1 day"))
       .thenReturn(getMockTrendingTopicsList())
-  }
-
-  def getMockTrendingTopicsList(): Set[TrendingTopicsWindowApi] = {
-    Set(TrendingTopicsWindowApi("start-time1", "end-time1", Seq(("top1", 9), ("top2", 6), ("top3", 1))),
-    TrendingTopicsWindowApi("start-time2", "end-time2", Seq(("topic1", 8), ("topic2", 4), ("topic3", 2))))
   }
 
   @Test
@@ -104,6 +98,11 @@ class TrendTopicsControllerTest extends MockFactory {
 
     mockMvc.perform(get(BASE_URL)
       .param(WINDOW_PHRASE, invalidPhrase))
+  }
+
+  private def getMockTrendingTopicsList(): Set[TrendingTopicsWindowApi] = {
+    Set(TrendingTopicsWindowApi("start-time1", "end-time1", Seq(("top1", 9), ("top2", 6), ("top3", 1))),
+      TrendingTopicsWindowApi("start-time2", "end-time2", Seq(("topic1", 8), ("topic2", 4), ("topic3", 2))))
   }
 
 }

@@ -22,4 +22,7 @@ $> docker run --name hdfs-local --network gdd-net -p 22022:22 -p 8020:8020 -p 50
 ```
 
 ## See hdfs via webui
-Check it out @ http://localhost:50070/explorer.html#/user/gdd
+Check out the sample files in hdfs @ http://localhost:50070/explorer.html#/user/gdd
+
+## Clean up the docker container
+To stop and remove the docker container run `docker rm -f hdfs-local`
