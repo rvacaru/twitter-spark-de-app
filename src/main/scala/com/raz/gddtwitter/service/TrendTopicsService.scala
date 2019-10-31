@@ -60,8 +60,9 @@ class TrendTopicsService @Autowired()(private val sparkSession: SparkSession,
   private def getTopicsDf(): DataFrame = {
     tweetDataService
       .getTweetDf()
+      .withColumn(TEXT, regexp_replace(trim(lower(col(TEXT))), "[^\\sa-zA-Z0-9]", ""))
       .withColumn(TEXT, explode(split(col(TEXT), "\\s+")))
-      .withColumn(TEXT, lower(col(TEXT)))
+      .where(col(TEXT) =!= "")
       .withColumnRenamed(TEXT, TOPIC)
   }
 

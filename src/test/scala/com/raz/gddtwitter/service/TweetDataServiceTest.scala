@@ -4,14 +4,13 @@ import java.sql.Timestamp
 
 import com.holdenkarau.spark.testing.{DatasetSuiteBase, SharedSparkContext}
 import com.raz.gddtwitter.config.properties.AppProperties
-import com.raz.gddtwitter.service.SchemaConstants.{CREATED_AT, TEXT}
+import com.raz.gddtwitter.service.TestSchemaConstants.{CREATED_AT, TEXT}
 import org.apache.spark.sql.{DataFrame, Dataset, SQLContext}
 import org.junit.runner.RunWith
 import org.mockito.Mockito.{mock, when, withSettings}
 import org.scalatest.check.Checkers
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{FlatSpec, PrivateMethodTester}
-
 
 @RunWith(classOf[JUnitRunner])
 class TweetDataServiceTest extends FlatSpec with PrivateMethodTester
@@ -24,13 +23,14 @@ class TweetDataServiceTest extends FlatSpec with PrivateMethodTester
   private val INVALID_LINES_SAMPLE_PATH: String = getClass.getResource("/testSampleInvalidLines.json").getPath()
   private val INVALID_LINES_TWITTER_SAMPLE_PATH: String = getClass.getResource("/testTwitterInvalidLines.json").getPath()
 
-
   private trait Test {
     val hdfsDataServiceMock: HdfsDataService = mock(classOf[HdfsDataService], withSettings().serializable())
     val appProperties: AppProperties =
       AppProperties("testMaster", "200", "testHdfsName", VALID_SAMPLE_PATH, VALID_TWITTER_SAMPLE_PATH)
 
     val tweetDataService: TweetDataService = new TweetDataService(spark, hdfsDataServiceMock, appProperties)
+
+    val twitterSampleToTweetDfMethod: PrivateMethod[DataFrame] = PrivateMethod[DataFrame]('twitterSampleToTweetDf)
   }
 
   "getTweetDf" should "union the two datasets into one dataframe" in new Test {
@@ -58,38 +58,35 @@ class TweetDataServiceTest extends FlatSpec with PrivateMethodTester
     assert(actualTweetDf.isEmpty)
   }
 
-  "twitterSampleToTweetDf" should "return an empty dataframe " +
+  "twitterSampleToTweetDfMethod" should "return an empty dataframe " +
     "with created_at and text cols when the string dataset is empty" in new Test {
 
     private val emptyStringDs = getEmptyDataSet
-    private val twitterSampleToTweetDf = PrivateMethod[DataFrame]('twitterSampleToTweetDf)
 
-    private val actualDf = tweetDataService.invokePrivate(twitterSampleToTweetDf(emptyStringDs))
+    private val actualDf = tweetDataService.invokePrivate(twitterSampleToTweetDfMethod(emptyStringDs))
 //    assertDataFrameEquals(expectedDf, actualDf) //sad this doesn't work
     assert(emptyTwitterDf().schema === actualDf.schema)
     assert(actualDf.isEmpty)
   }
 
-  "twitterSampleToTweetDf" should "return dataframe " +
+  "twitterSampleToTweetDfMethod" should "return dataframe " +
     "with created_at and text cols when a valid string dataset is passed" in new Test {
 
     private val validStringDs = createStringDs(VALID_TWITTER_SAMPLE_PATH)
-    private val twitterSampleToTweetDf = PrivateMethod[DataFrame]('twitterSampleToTweetDf)
 
-    private val actualDf = tweetDataService.invokePrivate(twitterSampleToTweetDf(validStringDs))
+    private val actualDf = tweetDataService.invokePrivate(twitterSampleToTweetDfMethod(validStringDs))
 //    assertDataFrameEquals(expectedDf, actualDf) //sad this doesn't work
     assert(emptyTwitterDf().schema === actualDf.schema)
     assert(!actualDf.isEmpty)
     assert(actualDf.count() === 3)
   }
 
-  "twitterSampleToTweetDf" should "filter out json lines " +
+  "twitterSampleToTweetDfMethod" should "filter out json lines " +
     "with empty or null created_at and text cols in the string dataset passed" in new Test {
 
     private val invalidStringDs = createStringDs(INVALID_TWITTER_SAMPLE_PATH)
-    private val twitterSampleToTweetDf = PrivateMethod[DataFrame]('twitterSampleToTweetDf)
 
-    private val actualDf = tweetDataService.invokePrivate(twitterSampleToTweetDf(invalidStringDs))
+    private val actualDf = tweetDataService.invokePrivate(twitterSampleToTweetDfMethod(invalidStringDs))
 //    assertDataFrameEquals(expectedDf, actualDf) //sad this doesn't work
     assert(emptyTwitterDf().schema === actualDf.schema)
     assert(actualDf.isEmpty)
