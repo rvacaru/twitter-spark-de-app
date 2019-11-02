@@ -47,7 +47,8 @@ class TrendTopicsServiceTest extends FlatSpec with PrivateMethodTester
 
   "getTopicsDf" should "returns a topics DF with double the size of a tweetDf containing lines with 2 words" +
     "and the topics Df contains exclusively lowercase and trimmed strings" in new Test {
-    val textColGenerator = new Column(TEXT, Gen.oneOf(" Only Two ", " Not More "))
+
+    val textColGenerator = new Column(TEXT, Gen.oneOf(" Foo Bar ", " Raz Taz "))
     private val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, tweetDfSchema)(textColGenerator)
 
     private val property = forAll(dataframeGen.arbitrary) {
@@ -58,9 +59,27 @@ class TrendTopicsServiceTest extends FlatSpec with PrivateMethodTester
 
           actualTopicsDf.count() === tweetDf.count() * 2 &&
           (
-            actualSetOfTopics.intersect(Set[String]("only", "two", "not", "more")).nonEmpty ||
+            actualSetOfTopics.intersect(Set[String]("foo", "bar", "raz", "taz")).nonEmpty ||
             actualSetOfTopics.isEmpty
           )
+      }
+    }
+    check(property)
+  }
+
+  "getTopicsDf" should "returns a topics DF without any stop words" in new Test {
+    val textColGenerator = new Column(TEXT, Gen.oneOf("ik foo", "is bar", "the raz", "only nu niet"))
+    private val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, tweetDfSchema)(textColGenerator)
+    implicit val generatorDrivenConfig = PropertyCheckConfiguration(minSize = 3)
+
+    private val property = forAll(dataframeGen.arbitrary) {
+      tweetDf => {
+        when(tweetDataServiceMock.getTweetDf()).thenReturn(tweetDf)
+        val actualTopicsDf = trendTopicsService.invokePrivate(getTopicsDfMethod())
+        val actualSetOfTopics: Set[String] = actualTopicsDf.select(TOPIC).distinct().collect().to[Set].map(row => row.getString(0))
+
+        actualSetOfTopics.intersect(Set[String]("foo", "bar", "raz")).nonEmpty ||
+          actualTopicsDf.isEmpty
       }
     }
     check(property)
@@ -83,8 +102,10 @@ class TrendTopicsServiceTest extends FlatSpec with PrivateMethodTester
     check(property)
   }
 
-  "groupTopicsPerWindow" should "create windows of correct size related to list of topics" in new Test {
-    val topicColGenerator = new Column(TOPIC, Gen.oneOf("ik", "ben", "raz"))
+  "groupTopicsPerWindow" should "create windows of striclty smaller size than the topicsDf " +
+    "and containg an array with the same topics" in new Test {
+
+    val topicColGenerator = new Column(TOPIC, Gen.oneOf("foo", "bar", "raz"))
     private val dataframeGen = DataframeGenerator.arbitraryDataFrameWithCustomFields(sqlContext, topicsDfSchema)(topicColGenerator)
     implicit val generatorDrivenConfig = PropertyCheckConfiguration(minSize = 3)
 
@@ -94,8 +115,8 @@ class TrendTopicsServiceTest extends FlatSpec with PrivateMethodTester
 
         actualTopicsWindowsDf.schema === topicsWindowDfSchema &&
           actualTopicsWindowsDf.count() < topicsDf.count() &&
-          !actualTopicsWindowsDf.where(array_contains(col(TOPICS), "ik")).isEmpty ||
-          !actualTopicsWindowsDf.where(array_contains(col(TOPICS), "ben")).isEmpty ||
+          !actualTopicsWindowsDf.where(array_contains(col(TOPICS), "foo")).isEmpty ||
+          !actualTopicsWindowsDf.where(array_contains(col(TOPICS), "bar")).isEmpty ||
           !actualTopicsWindowsDf.where(array_contains(col(TOPICS), "raz")).isEmpty //&&
 //          actualTopicsWindowsDf.where(
 //            !array_contains(col(TOPICS), "ik") or !array_contains(col(TOPICS), "ben") or !array_contains(col(TOPICS), "raz")).isEmpty

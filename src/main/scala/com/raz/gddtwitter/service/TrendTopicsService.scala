@@ -2,6 +2,7 @@ package com.raz.gddtwitter.service
 
 import com.raz.gddtwitter.domain.{TopicsWindow, TrendingTopicsWindow, TrendingTopicsWindowApi}
 import com.raz.gddtwitter.service.SchemaConstants._
+import com.raz.gddtwitter.service.StopWords.stopWords
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,6 +64,7 @@ class TrendTopicsService @Autowired()(private val sparkSession: SparkSession,
       .withColumn(TEXT, regexp_replace(trim(lower(col(TEXT))), "[^\\sa-zA-Z0-9]", ""))
       .withColumn(TEXT, explode(split(col(TEXT), "\\s+")))
       .where(col(TEXT) =!= "")
+      .where(!col(TEXT).isin(stopWords.toSeq:_*))
       .withColumnRenamed(TEXT, TOPIC)
   }
 
