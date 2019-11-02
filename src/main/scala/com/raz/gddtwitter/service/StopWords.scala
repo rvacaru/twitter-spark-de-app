@@ -1,5 +1,8 @@
 package com.raz.gddtwitter.service
 
+/**
+ * Stop word dictionary, ideally we should use a library or a rest service to get the relevant stop words
+ */
 object StopWords {
   val stopWords: Set[String] = Set(
       "rt", "a", "about", "above", "above", "across", "after", "afterwards", "again", "against", "all",

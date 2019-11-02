@@ -22,6 +22,14 @@ class PropertiesConfig {
   @Value("${topics.hdfs.path.twitter-sample:hdfs:///default/path/twitter-sample.json}")
   private val twitterSampleHdfsPath: String = null
 
+  /**
+   * Bean containing all the properties for this application.
+   * It can be injected in the services that need some properties and it can easily be mocked to return the
+   * desired property values.
+   *
+   * However this shouldn't be a fat bean containing all the properties, this should be split into multiple beans
+   * each containing a category of properties: one bean for spark properties, one for sample file paths, etc..
+   */
   @Bean
   def appProperties: AppProperties = {
     AppProperties(

@@ -9,6 +9,15 @@ import org.apache.spark.sql.{Column, DataFrame, Dataset, SparkSession}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+/**
+ * Service fetching two types of datasets (for now) which exposes to the upper services a dataframe of tweets
+ * for further analyzes.
+ * The service unifies the tweets coming from the two datasets into a single dataframe, if one of the initial datasets
+ * is missing the upper services will analyze based on only part of the data available.
+ *
+ * If no data is available the choice of what to do next is left to the upper services. If desired an exception can be
+ * thrown here when there is no data to analyze coming from hdfs.
+ */
 @Service
 class TweetDataService @Autowired()(private val sparkSession: SparkSession,
                                     private val hdfsDataService: HdfsDataService,

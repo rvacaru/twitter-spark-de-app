@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.{GetMapping, RequestMapping, Requ
 class TrendTopicsController @Autowired()(private val trendTopicsService: TrendTopicsService) {
 
   /**
-   * Gets the top N trending topics for each time window from the available data
+   * Api which gets the top N trending topics for each time window from the available data
    *
    * @param noTopics number of top trending topics per window, should be greater than 0
-   * @param windowPhrase window definition as positive integer followed by second, minute, hour, day or week
+   * @param windowPhrase window definition as positive integer followed by 'second', 'minute', 'hour', 'day' or 'week'
    * @return a list of windows with the top N trending topics for each one of them
    */
   @GetMapping(Array("/trending_topics"))

@@ -8,6 +8,12 @@ import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+/**
+ * Services analyzing the tweets from an aggregated tweets dataframe. The main functionality is finding the top N
+ * trending topics for each timewindow, with the number of top topics and window size configurable in function args.
+ *
+ * The service can return either a dataframe (for other spark analyzes) or a set(for a rest api) of the top trending topics.
+ */
 @Service
 class TrendTopicsService @Autowired()(private val sparkSession: SparkSession,
                                       private val tweetDataService: TweetDataService) extends Serializable {
