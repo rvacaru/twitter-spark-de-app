@@ -7,7 +7,7 @@ import org.springframework.context.annotation.{Bean, Configuration}
 @Configuration
 class PropertiesConfig {
 
-  @Value("${spark.master}")
+  @Value("${spark.master:local[*]}")
   private val sparkMaster: String = null
 
   @Value("${spark.sql.shuffle.partitions:200}")
