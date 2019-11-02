@@ -9,7 +9,7 @@ This folder contains the dockerfile for:
 You'll be able to start an hadoop container with the sample files already added in hdfs under `/user/gdd`.
 
 ## Steps to run 
-First of all place the `sample.json` and `twitter-sample.json` inside this directory.
+First of all place the `sample.json` and `twitter-sample.json` files inside this directory, together with this readme.
 
 Then open a terminal, cd to this directory and execute the following:
 ```
