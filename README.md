@@ -67,6 +67,12 @@ connect to the hdfs datanode at port 50010. I provide both hadoop and app contai
 option so the containers run on the same network, the app can indeed connect to the master `hdfs://hdfs-local:8020` but later 
 fails to actually load the sample files from the datanode on port 50010. I didn't have time to fix this.
 
+To run the app in docker the following application properties need to be provided:
+```
+hdfs.default.name=hdfs://hdfs-local:8020
+topics.hdfs.path.sample=hdfs://hdfs-local:8020/user/gdd/sample.json
+topics.hdfs.path.twitter-sample=hdfs://hdfs-local:8020/user/gdd/twitter-sample.json
+```
 So for running the app in a docker container, just for fun, run via terminal:
 
 `>$ docker run --name gdd-trending-twitter-raz --network gdd-net -p 8080:8080 gdd-twitter`
